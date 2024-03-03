@@ -104,6 +104,6 @@ class ImageDatasetAPI(Resource):
 api.add_resource(ImageDatasetAPI, '/datasets', '/datasets/<int:dataset_id>')
 
 if __name__ == '__main__':
-    with app.app_context():  # 创建并激活应用上下文
-        db.create_all()  # 在应用上下文中创建数据库表
+    with app.app_context():
+        db.create_all()  
     app.run(debug=False)
