@@ -3,14 +3,23 @@
 ## Image Dataset Management API
 
 ## Overview
-This Image Dataset Management API is a Flask-based RESTful web service designed for handling image datasets. It is particularly useful for organizing, storing, and retrieving metadata related to various image datasets, which could be leveraged in machine learning, data analysis, or digital archives.
+This project is a simple yet powerful implementation of an image classification system built with Flask for the web framework, Celery for handling asynchronous tasks, and TensorFlow for the underlying machine learning model. It includes an API for uploading images to be classified and for training the model with new datasets.
 
 ## Features
 Logging: Detailed logging of each request with response status and duration.
 SQLite Database Integration: Utilizes SQLite for storing image dataset information.
 RESTful API: Provides GET and POST methods for accessing and adding dataset information.
+Asynchronous Task Handling: Uses Celery with Redis as the message broker to manage long-running tasks like model training and image prediction without blocking the main application.
 
 ## Requirements
 Flask
 Flask-RESTful
 Flask-SQLAlchemy
+Celery
+pytest
+redis
+
+##Testing the Application
+
+
+
