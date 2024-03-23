@@ -12,9 +12,9 @@ RESTful API: Provides GET and POST methods for accessing and adding dataset info
 Asynchronous Task Handling: Uses Celery with Redis as the message broker to manage long-running tasks like model training and image prediction without blocking the main application.
 
 ## Requirements
-Flask
-Flask-RESTful
-Flask-SQLAlchemy
+Flask  
+Flask-RESTful  
+Flask-SQLAlchemy  
 Celery
 pytest
 redis
