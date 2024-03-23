@@ -19,7 +19,7 @@ Celery
 pytest
 redis
 
-##Testing the Application
+## Testing the Application
 To run the tests, ensure you have pytest installed in your development environment. 
 The test suite includes checks for:
 
