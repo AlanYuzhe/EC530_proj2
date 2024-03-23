@@ -20,6 +20,10 @@ pytest
 redis
 
 ##Testing the Application
+To run the tests, ensure you have pytest installed in your development environment. 
+The test suite includes checks for:
 
+The /train endpoint to ensure it triggers the asynchronous model training task and responds with the appropriate message.
+The /predict endpoint to validate behavior when no image is provided and verify that it correctly handles image data for prediction tasks, including mocking asynchronous prediction tasks and ensuring the expected response is returned.
 
 
