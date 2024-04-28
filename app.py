@@ -104,6 +104,29 @@ class ImageDatasetAPI(Resource):
 # Add the resource to the API
 api.add_resource(ImageDatasetAPI, '/datasets', '/datasets/<int:dataset_id>')
 
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    data = request.json
+    if 'name' not in data or 'image_path' not in data:
+        return jsonify({'message': 'Name and image path are required'}), 400
+
+    new_image = ImageDataset(
+        name=data['name'],
+        description=data.get('description', ''),
+        type=data.get('type', 'example'),
+        creation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        image_format=data.get('image_format', 'JPG'),
+        image_size=data.get('image_size', 'Unknown'),
+        image_path=data['image_path'],
+        labels=data.get('labels', ''),
+        annotation=data.get('annotation', '')
+    )
+
+    db.session.add(new_image)
+    db.session.commit()
+    
+    return jsonify({'message': 'Image data uploaded successfully', 'id': new_image.id}), 201
+
 def make_celery(app_name=__name__):
     celery = Celery(app_name, broker='redis://localhost:6379/0')
     celery.config_from_object('celeryconfig')
