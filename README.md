@@ -39,3 +39,5 @@ This project uses GitHub Actions for continuous integration, which automates tes
 
 ## Managing Images
 Images uploaded through the API are saved to a designated directory on the server as specified in the configuration. Ensure that the server has adequate storage and that the directory permissions are set correctly to allow for image storage.
+
+![image](https://github.com/AlanYuzhe/EC530_proj2/assets/144563819/ecc0c51f-1c0b-4c4b-8673-9026ac677585)
