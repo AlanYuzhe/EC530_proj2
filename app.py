@@ -10,9 +10,21 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Flatten
 from PIL import Image
 import io
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 api = Api(app)
+app.config['SERVER_NAME'] = 'localhost:5000'
+app.config['APPLICATION_ROOT'] = '/'
+app.config['PREFERRED_URL_SCHEME'] = 'http'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'image_dataset.db')
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -101,30 +113,58 @@ class ImageDatasetAPI(Resource):
         db.session.commit()
         return dataset, 201
 
-# Add the resource to the API
 api.add_resource(ImageDatasetAPI, '/datasets', '/datasets/<int:dataset_id>')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
-    data = request.json
-    if 'name' not in data or 'image_path' not in data:
-        return jsonify({'message': 'Name and image path are required'}), 400
+    if 'image' not in request.files:
+        app.logger.error('No image provided')
+        return jsonify({'message': 'No image provided'}), 400
 
-    new_image = ImageDataset(
-        name=data['name'],
-        description=data.get('description', ''),
-        type=data.get('type', 'example'),
-        creation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        image_format=data.get('image_format', 'JPG'),
-        image_size=data.get('image_size', 'Unknown'),
-        image_path=data['image_path'],
-        labels=data.get('labels', ''),
-        annotation=data.get('annotation', '')
-    )
+    file = request.files['image']
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    try:
+        file.save(file_path)
+        app.logger.info(f'File {filename} saved successfully at {file_path}')
+    except Exception as e:
+        app.logger.error(f'Failed to save file {filename}: {e}')
+        return jsonify({'message': 'Failed to save file'}), 500
+
+    name = request.form.get('name')
+    description = request.form.get('description')
+    image_type = request.form.get('type')
+    image_format = file.content_type
+    image_size = os.path.getsize(file_path)
+
+    if not name or not image_format:
+        return jsonify({'message': 'Name and image format are required'}), 400
+
+    try:
+        new_image = ImageDataset(
+            name=name,
+            description=description,
+            type=image_type,
+            creation_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            image_format=image_format,
+            image_size=str(image_size),
+            image_path=file_path,
+            labels=request.form.get('labels'),
+            annotation=request.form.get('annotation')
+        )
+        db.session.add(new_image)
+        db.session.commit()
+        app.logger.info(f'New image record {new_image.id} added successfully')
+    except Exception as e:
+        app.logger.error(f'Error adding image record: {e}')
+        db.session.rollback()
+        return jsonify({'message': 'Database error'}), 500
 
     db.session.add(new_image)
     db.session.commit()
-    
+
     return jsonify({'message': 'Image data uploaded successfully', 'id': new_image.id}), 201
 
 def make_celery(app_name=__name__):
@@ -136,22 +176,31 @@ celery = make_celery()
 
 @celery.task()
 def train_model_async():
-    model = Sequential([
+    try:
+        model = Sequential([
         Flatten(input_shape=(28, 28)),
         Dense(128, activation='relu'),
         Dense(10, activation='softmax')
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    train_images = np.random.rand(100, 28, 28)
-    train_labels = np.random.randint(10, size=(100,))
-    model.fit(train_images, train_labels, epochs=1)
-    model.save('mnist_model.h5')
-    return 'Model trained successfully'
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        train_images = np.random.rand(100, 28, 28)
+        train_labels = np.random.randint(10, size=(100,))
+        model.fit(train_images, train_labels, epochs=1)
+        model.save('mnist_model.h5')
+        app.logger.info('Model training started')
+    except Exception as e:
+        app.logger.error(f'Model training failed: {e}')
+
 
 @app.route('/train', methods=['POST'])
 def train():
-    train_model_async.delay()
-    return jsonify({'message': 'Training started'})
+    try:
+        train_model_async.delay()
+        app.logger.info('Training task submitted successfully')
+        return jsonify({'message': 'Training started'}), 200
+    except Exception as e:
+        app.logger.error(f'Training task submission failed: {e}')
+        return jsonify({'error': 'Training task submission failed', 'details': str(e)}), 500
 
 @celery.task()
 def predict_async(data):
