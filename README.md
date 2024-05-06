@@ -5,6 +5,10 @@
 ## Overview
 This project implements an image classification system using Flask as the web framework, Celery for handling asynchronous tasks, and TensorFlow for the machine learning model. It includes an API for uploading images for classification and training the model with new datasets.
 
+##Docker
+The Docker image file is too large to push, so I share it in google drive
+https://drive.google.com/drive/folders/10Q92BIqEGxUsK8bmPy4O2ktuZtYR7D5k?usp=sharing
+
 ## Features
 Logging: Detailed logging for each request including response status and duration.
 SQLite Database Integration: Uses SQLite to store information about the image datasets.
