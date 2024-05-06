@@ -15,8 +15,9 @@ GitHub Actions Integration: Automates testing and other workflows using GitHub A
 
 ## Requirements
 To install the necessary requirements for this project, ensure you use the provided 'environment.yml' file which specifies all the necessary dependencies. This approach helps in maintaining consistency across various development environments. To setup the environment, run:
-    `conda env create -f environment.yml`
-    `conda activate <env_name>`
+    `conda env create -f environment.yml`  
+Activate the environment with:
+    `conda activate <env_name>`  
 
 ## Key Dependencies
 Flask
